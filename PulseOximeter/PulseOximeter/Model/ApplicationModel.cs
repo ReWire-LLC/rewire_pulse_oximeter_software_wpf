@@ -32,6 +32,7 @@ namespace PulseOximeter.Model
         private BackgroundWorker _background_thread = new BackgroundWorker();
         private int _heart_rate = 0;
         private int _spo2 = 0;
+        private int _ir = 0;
 
         private SerialPort? _serial_port = null;
         private List<byte> _buffer = new List<byte>();
@@ -219,14 +220,18 @@ namespace PulseOximeter.Model
                         var split_current_line = current_line.Split('\t').ToList();
                         if (split_current_line.Count >= 9)
                         {
+                            var ir_string = split_current_line[1];
                             var hr_string = split_current_line[3];
                             var spo2_string = split_current_line[5];
 
+                            var ir_parse_success = Int32.TryParse(ir_string, out int ir);
                             var hr_parse_success = Int32.TryParse(hr_string, out int hr);
                             var spo2_parse_success = Int32.TryParse(spo2_string, out int spo2);
 
-                            if (hr_parse_success && spo2_parse_success)
+                            if (hr_parse_success && spo2_parse_success && ir_parse_success)
                             {
+                                IR = ir;
+
                                 if (hr != HeartRate)
                                 {
                                     HeartRate = hr;
@@ -460,6 +465,19 @@ namespace PulseOximeter.Model
         #endregion
 
         #region Properties
+
+        public int IR
+        {
+            get
+            {
+                return _ir;
+            }
+            private set
+            {
+                _ir = value;
+                BackgroundThread_NotifyPropertyChanged(nameof(IR));
+            }
+        }
 
         public int HeartRate
         {

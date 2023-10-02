@@ -6,30 +6,31 @@
         xmlns:local="clr-namespace:PulseOximeter"
         mc:Ignorable="d"
         Loaded="Window_Loaded"
-        Title="MainWindow" Height="450" Width="800">
+        Title="ReWire Pulse Oximeter" Height="576" Width="1024">
     <Grid Margin="20">
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.Column="0" Text="Heart Rate" FontSize="48" HorizontalAlignment="Center" />
-        <TextBlock Grid.Row="0" Grid.Column="1" Text="SpO2" FontSize="48" HorizontalAlignment="Center" />
+        <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden">
+            <!-- Empty -->
+        </Frame>
 
-        <Border Grid.Row="1" Grid.Column="0" CornerRadius="5" BorderThickness="2" BorderBrush="Gray" Margin="10" Background="{Binding Path=HeartRateBackground, FallbackValue=White}">
-            <TextBlock Text="{Binding Path=HeartRate, FallbackValue=100}" FontSize="150" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" />
-        </Border>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-        <Border Grid.Row="1" Grid.Column="1" CornerRadius="5" BorderThickness="2" BorderBrush="Gray" Margin="10" Background="{Binding Path=SpO2Background, FallbackValue=White}">
-            <TextBlock Text="{Binding Path=SpO2, FallbackValue=100}" FontSize="150" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" />
-        </Border>
+            <TextBlock Grid.Column="0" Text="{Binding Path=ConnectionState, FallbackValue=No device found}" FontSize="18" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10" />
 
-        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding Path=ConnectionState, FallbackValue=No device found}" FontSize="18" HorizontalAlignment="Left" VerticalAlignment="Center" />
+            <Button x:Name="SetAlarmsButton" Grid.Column="1" Content="Set Alarms" Margin="10" FontSize="18" Padding="10" />
+            <Button x:Name="DetailedViewButton" Grid.Column="2" Content="{Binding Path=DetailedViewButtonText, FallbackValue=Detailed View}" Margin="10" FontSize="18" Padding="10" Click="DetailedViewButton_Click" />
+            <Button x:Name="RecordButton" Grid.Column="3" Content="Record" Margin="10" FontSize="18" Padding="10" />
+        </Grid>
 
     </Grid>
 </Window>

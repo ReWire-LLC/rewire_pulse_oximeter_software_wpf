@@ -1,4 +1,5 @@
 ﻿using PulseOximeter.Model;
+using PulseOximeter.View;
 using PulseOximeter.ViewModel;
 using System;
 using System.Collections.Generic;
@@ -32,7 +33,29 @@ namespace PulseOximeter
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            MainPage_StandardView standard_view = new MainPage_StandardView(this.DataContext as MainWindowViewModel);
+            MainFrame.Navigate(standard_view);
             _model.Start();
+        }
+
+        private void DetailedViewButton_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = this.DataContext as MainWindowViewModel;
+            if (vm != null)
+            {
+                vm.ToggleDetailedView();
+
+                if (vm.DetailedView)
+                {
+                    MainPage_DetailedView detailed_view = new MainPage_DetailedView(this.DataContext as MainWindowViewModel);
+                    MainFrame.Navigate(detailed_view);
+                }
+                else
+                {
+                    MainPage_StandardView standard_view = new MainPage_StandardView(this.DataContext as MainWindowViewModel);
+                    MainFrame.Navigate(standard_view);
+                }
+            }
         }
     }
 }
