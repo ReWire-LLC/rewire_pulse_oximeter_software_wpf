@@ -21,6 +21,7 @@ namespace PulseOximeter.ViewModel
         private ApplicationModel _model;
         private bool _detailed_view = false;
 
+        private TimeSpan _ppg_lookback_duration = TimeSpan.FromSeconds(30);
         private PlotModel _ppg_plotmodel = new PlotModel();
 
         private List<DateTime> _ppg_plot_xvals = new List<DateTime>();
@@ -48,13 +49,19 @@ namespace PulseOximeter.ViewModel
             LinearAxis x_axis = new LinearAxis()
             {
                 Minimum = 0,
-                Maximum = 60,
-                Position = AxisPosition.Bottom
+                Maximum = _ppg_lookback_duration.TotalSeconds,
+                Position = AxisPosition.Bottom,
+                LabelFormatter = x => null,
+                IsPanEnabled = false,
+                IsZoomEnabled = false,
             };
 
             LinearAxis y_axis = new LinearAxis()
             {
-                Position = AxisPosition.Left
+                Position = AxisPosition.Left,
+                LabelFormatter = x => null,
+                IsPanEnabled = false,
+                IsZoomEnabled = false,
             };
 
             LineSeries line_series = new LineSeries()
@@ -64,6 +71,8 @@ namespace PulseOximeter.ViewModel
                 Color = OxyColors.Blue
             };
 
+            _ppg_plotmodel.PlotAreaBorderThickness = new OxyPlot.OxyThickness(0);
+            _ppg_plotmodel.PlotMargins = new OxyPlot.OxyThickness(0);
             _ppg_plotmodel.Axes.Add(x_axis);
             _ppg_plotmodel.Axes.Add(y_axis);
             _ppg_plotmodel.Series.Add(line_series);
@@ -89,7 +98,7 @@ namespace PulseOximeter.ViewModel
             _ppg_plot_xvals.Add(now_datetime);
             _ppg_plot_yvals.Add(ir_value);
 
-            int last_index_to_remove = _ppg_plot_xvals.FindLastIndex(0, x => x < (now_datetime - TimeSpan.FromSeconds(60)));
+            int last_index_to_remove = _ppg_plot_xvals.FindLastIndex(0, x => x < (now_datetime - _ppg_lookback_duration));
             if (last_index_to_remove > -1)
             {
                 _ppg_plot_xvals.RemoveRange(0, last_index_to_remove + 1);
