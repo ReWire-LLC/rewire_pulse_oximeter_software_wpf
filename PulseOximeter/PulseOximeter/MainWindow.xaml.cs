@@ -24,17 +24,23 @@ namespace PulseOximeter
     public partial class MainWindow : Window
     {
         private ApplicationModel _model = new ApplicationModel();
+        private MainPage_StandardView? _standard_view = null;
+        private MainPage_DetailedView? _detailed_view = null;
 
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new MainWindowViewModel(_model);
+
+            var vm = new MainWindowViewModel(_model);
+
+            DataContext = vm;
+            _detailed_view = new MainPage_DetailedView(vm);
+            _standard_view = new MainPage_StandardView(vm);
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            MainPage_StandardView standard_view = new MainPage_StandardView(this.DataContext as MainWindowViewModel);
-            MainFrame.Navigate(standard_view);
+            MainFrame.Navigate(_standard_view);
             _model.Start();
         }
 
@@ -47,13 +53,11 @@ namespace PulseOximeter
 
                 if (vm.DetailedView)
                 {
-                    MainPage_DetailedView detailed_view = new MainPage_DetailedView(this.DataContext as MainWindowViewModel);
-                    MainFrame.Navigate(detailed_view);
+                    MainFrame.Navigate(_detailed_view);
                 }
                 else
                 {
-                    MainPage_StandardView standard_view = new MainPage_StandardView(this.DataContext as MainWindowViewModel);
-                    MainFrame.Navigate(standard_view);
+                    MainFrame.Navigate(_standard_view);
                 }
             }
         }
