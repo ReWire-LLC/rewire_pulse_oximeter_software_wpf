@@ -47,6 +47,8 @@ namespace PulseOximeter.Model
         private int _alarm_spo2_min = 70;
         private int _alarm_spo2_max = 100;
 
+        private bool _mute_audio = false;
+
         /// <summary>
         /// This pitch mapping was taken from the following published paper: 
         /// https://array.aami.org/doi/10.2345/0899-8205-56.2.46
@@ -189,7 +191,10 @@ namespace PulseOximeter.Model
             BackgroundThread_ReceivePulseOximeterData();
 
             //Handle audio output
-            BackgroundThread_HandleAudio();
+            if (!_mute_audio)
+            {
+                BackgroundThread_HandleAudio();
+            }
         }
 
         private void BackgroundThread_ReceivePulseOximeterData ()
@@ -547,6 +552,19 @@ namespace PulseOximeter.Model
             {
                 _device_connection_state = value;
                 BackgroundThread_NotifyPropertyChanged(nameof(ConnectionState));
+            }
+        }
+
+        public bool MuteAudio
+        {
+            get
+            {
+                return _mute_audio;
+            }
+            set
+            {
+                _mute_audio = value;
+                NotifyPropertyChanged(nameof(MuteAudio));
             }
         }
 

@@ -19,7 +19,8 @@
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
@@ -27,9 +28,10 @@
 
             <TextBlock Grid.Column="0" Text="{Binding Path=ConnectionState, FallbackValue=No device found}" FontSize="18" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10" />
 
-            <Button x:Name="SetAlarmsButton" Grid.Column="1" Content="Set Alarms" Margin="10" FontSize="18" Padding="10" />
-            <Button x:Name="DetailedViewButton" Grid.Column="2" Content="{Binding Path=DetailedViewButtonText, FallbackValue=Detailed View}" Margin="10" FontSize="18" Padding="10" Click="DetailedViewButton_Click" />
-            <Button x:Name="RecordButton" Grid.Column="3" Content="Record" Margin="10" FontSize="18" Padding="10" />
+            <Button x:Name="MuteButton" Grid.Column="1" Content="{Binding Path=MuteButtonText, FallbackValue=Mute}" Margin="10" FontSize="18" Padding="10" Click="MuteButton_Click" />
+            <Button x:Name="SetAlarmsButton" Grid.Column="2" Content="Set Alarms" Margin="10" FontSize="18" Padding="10" />
+            <Button x:Name="DetailedViewButton" Grid.Column="3" Content="{Binding Path=DetailedViewButtonText, FallbackValue=Detailed View}" Margin="10" FontSize="18" Padding="10" Click="DetailedViewButton_Click" />
+            <Button x:Name="RecordButton" Grid.Column="4" Content="Record" Margin="10" FontSize="18" Padding="10" />
         </Grid>
 
     </Grid>

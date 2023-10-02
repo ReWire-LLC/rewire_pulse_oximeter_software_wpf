@@ -57,5 +57,14 @@ namespace PulseOximeter
                 }
             }
         }
+
+        private void MuteButton_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = this.DataContext as MainWindowViewModel;
+            if (vm != null)
+            {
+                vm.ToggleMute();
+            }
+        }
     }
 }

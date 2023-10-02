@@ -202,6 +202,22 @@ namespace PulseOximeter.ViewModel
             }
         }
 
+        [ReactToModelPropertyChanged(new string[] { "MuteAudio" })]
+        public string MuteButtonText
+        {
+            get
+            {
+                if (_model.MuteAudio)
+                {
+                    return "Unmute";
+                }
+                else
+                {
+                    return "Mute";
+                }
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -211,6 +227,11 @@ namespace PulseOximeter.ViewModel
             _detailed_view = !_detailed_view;
             NotifyPropertyChanged(nameof(DetailedView));
             NotifyPropertyChanged(nameof(DetailedViewButtonText));
+        }
+
+        public void ToggleMute ()
+        {
+            _model.MuteAudio = !_model.MuteAudio;
         }
 
         #endregion
