@@ -50,6 +50,7 @@ namespace PulseOximeter.ViewModel
 
             Initialize_PPG_PlotModel();
             Initialize_HR_PlotModel();
+            Initialize_SpO2_PlotModel();
         }
 
         #endregion
@@ -127,6 +128,42 @@ namespace PulseOximeter.ViewModel
             _hr_plotmodel.InvalidatePlot(true);
         }
 
+        private void Initialize_SpO2_PlotModel ()
+        {
+            LinearAxis x_axis = new LinearAxis()
+            {
+                Minimum = 0,
+                Maximum = _spo2_lookback_duration.TotalSeconds,
+                Position = AxisPosition.Bottom,
+                LabelFormatter = x => null,
+                IsPanEnabled = false,
+                IsZoomEnabled = false,
+            };
+
+            LinearAxis y_axis = new LinearAxis()
+            {
+                Position = AxisPosition.Left,
+                IsPanEnabled = false,
+                IsZoomEnabled = false,
+                Minimum = 0,
+                MinimumRange = 50
+            };
+
+            LineSeries line_series = new LineSeries()
+            {
+                LineStyle = LineStyle.Solid,
+                StrokeThickness = 1,
+                Color = OxyColors.Blue
+            };
+
+            _spo2_plotmodel.PlotAreaBorderThickness = new OxyPlot.OxyThickness(1, 0, 0, 1);
+            _spo2_plotmodel.PlotMargins = new OxyPlot.OxyThickness(0);
+            _spo2_plotmodel.Axes.Add(x_axis);
+            _spo2_plotmodel.Axes.Add(y_axis);
+            _spo2_plotmodel.Series.Add(line_series);
+            _spo2_plotmodel.InvalidatePlot(true);
+        }
+
         #endregion
 
         #region OxyPlot Update Code
@@ -142,6 +179,10 @@ namespace PulseOximeter.ViewModel
                 else if (e.PropertyName.Equals("HeartRate"))
                 {
                     Update_HR_PlotModel();
+                }
+                else if (e.PropertyName.Equals("SpO2"))
+                {
+                    Update_SpO2_PlotModel();
                 }
             }
         }
@@ -175,9 +216,9 @@ namespace PulseOximeter.ViewModel
         private void Update_HR_PlotModel ()
         {
             var now_datetime = DateTime.Now;
-            var ir_value = _model.HeartRate;
+            var hr_value = _model.HeartRate;
             _hr_plot_xvals.Add(now_datetime);
-            _hr_plot_yvals.Add(ir_value);
+            _hr_plot_yvals.Add(hr_value);
 
             int last_index_to_remove = _hr_plot_xvals.FindLastIndex(0, x => x < (now_datetime - _hr_lookback_duration));
             if (last_index_to_remove > -1)
@@ -198,6 +239,32 @@ namespace PulseOximeter.ViewModel
             _hr_plotmodel.InvalidatePlot(true);
         }
 
+        private void Update_SpO2_PlotModel ()
+        {
+            var now_datetime = DateTime.Now;
+            var spo2_value = _model.SpO2;
+            _spo2_plot_xvals.Add(now_datetime);
+            _spo2_plot_yvals.Add(spo2_value);
+
+            int last_index_to_remove = _spo2_plot_xvals.FindLastIndex(0, x => x < (now_datetime - _spo2_lookback_duration));
+            if (last_index_to_remove > -1)
+            {
+                _spo2_plot_xvals.RemoveRange(0, last_index_to_remove + 1);
+                _spo2_plot_yvals.RemoveRange(0, last_index_to_remove + 1);
+            }
+
+            var line_series = _spo2_plotmodel.Series.FirstOrDefault() as LineSeries;
+            if (line_series != null)
+            {
+                line_series.Points.Clear();
+                var oldest_datetime = _spo2_plot_xvals[0];
+                var datapoints = _spo2_plot_xvals.Zip(_spo2_plot_yvals, (first, second) => new DataPoint((first - oldest_datetime).TotalSeconds, second)).ToList();
+                line_series.Points.AddRange(datapoints);
+            }
+
+            _spo2_plotmodel.InvalidatePlot(true);
+        }
+
         #endregion
 
         #region Properties
@@ -215,6 +282,14 @@ namespace PulseOximeter.ViewModel
             get
             {
                 return _hr_plotmodel;
+            }
+        }
+
+        public PlotModel SpO2_PlotModel
+        {
+            get
+            {
+                return _spo2_plotmodel;
             }
         }
 
