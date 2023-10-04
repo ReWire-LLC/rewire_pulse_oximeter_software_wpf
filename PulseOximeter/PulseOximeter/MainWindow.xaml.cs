@@ -70,5 +70,21 @@ namespace PulseOximeter
                 vm.ToggleMute();
             }
         }
+
+        private void SetAlarmsButton_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = this.DataContext as MainWindowViewModel;
+            if (vm != null)
+            {
+                Window_SetAlarms set_alarms_window = new Window_SetAlarms(_model);
+                set_alarms_window.Owner = this;
+                set_alarms_window.ShowDialog();
+            }
+        }
+
+        private void RecordButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
