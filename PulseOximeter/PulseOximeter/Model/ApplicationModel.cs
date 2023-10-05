@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.IO.Ports;
 using System.Linq;
 using System.Management;
@@ -26,6 +27,14 @@ namespace PulseOximeter.Model
         #endregion
 
         #region Private data members
+
+        private bool _recording = false;
+        private string _recording_file = string.Empty;
+        private DateTime _recording_start_time = DateTime.MinValue;
+        private Stopwatch _recording_stopwatch = new Stopwatch();
+        private RecordingState _recording_state = RecordingState.NotRecording;
+        private StreamWriter? _recording_writer = null;
+        private DateTime _recording_last_ui_update_time = DateTime.MinValue;
 
         private List<DateTime> _recent_ir_value_datetimes = new List<DateTime>();
         private List<int> _recent_ir_values = new List<int>();
@@ -218,6 +227,94 @@ namespace PulseOximeter.Model
             }
         }
 
+        private void BackgroundThread_HandleRecording (string data_row)
+        {
+            switch (_recording_state)
+            {
+                case RecordingState.NotRecording:
+
+                    //If the user has requested to start a recording, move to the "launching recording" state
+                    if (_recording && !string.IsNullOrWhiteSpace(_recording_file))
+                    {
+                        _recording_state = RecordingState.LaunchingRecording;
+                    }
+
+                    break;
+                case RecordingState.LaunchingRecording:
+
+                    //In this state, we attempt to open a file for writing
+                    try
+                    {
+                        _recording_writer = new StreamWriter(_recording_file);
+                        _recording_state = RecordingState.Recording;
+
+                        string first_line = "Milliseconds, IR, Red, HR, HR Confidence, SpO2, Algorithm State, Algorithm Status, Interbeat Interval";
+                        _recording_writer.WriteLine(first_line);
+
+                        _recording_start_time = DateTime.Now;
+                        _recording_stopwatch.Restart();
+                    }
+                    catch (Exception ex)
+                    {
+                        _recording_writer = null;
+                        _recording_state = RecordingState.NotRecording;
+                        _recording = false;
+                        _recording_stopwatch.Stop();
+                        BackgroundThread_NotifyPropertyChanged(nameof(IsRecording));
+                    }
+                    
+                    break;
+                case RecordingState.Recording:
+
+                    double ts = _recording_stopwatch.ElapsedMilliseconds;
+                    string new_line = ts + ", " + data_row;
+                    try
+                    {
+                        //Record the current line of data
+                        _recording_writer?.WriteLine(new_line);
+
+                        //Check to see if the UI needs to be updated with recording information
+                        if (DateTime.Now >= (_recording_last_ui_update_time + TimeSpan.FromSeconds(1)))
+                        {
+                            BackgroundThread_NotifyPropertyChanged(nameof(IsRecording));
+                        }
+
+                        //Check to see the recording has been stopped/cancelled
+                        if (!_recording)
+                        {
+                            //If so, go to the "stopping recording" state
+                            _recording_state = RecordingState.StoppingRecording;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _recording_writer = null;
+                        _recording_state = RecordingState.NotRecording;
+                        _recording = false;
+                        _recording_stopwatch.Stop();
+                        BackgroundThread_NotifyPropertyChanged(nameof(IsRecording));
+                    }
+                    
+                    break;
+                case RecordingState.StoppingRecording:
+
+                    try
+                    {
+                        _recording_writer?.Close();
+                        _recording_stopwatch.Stop();
+                    }
+                    catch (Exception ex)
+                    {
+                        //empty
+                    }
+
+                    _recording_state = RecordingState.NotRecording;
+                    BackgroundThread_NotifyPropertyChanged(nameof(IsRecording));
+
+                    break;
+            }
+        }
+
         private void BackgroundThread_ReceivePulseOximeterData ()
         {
             //Handle input of the data from the pulse oximeter
@@ -266,6 +363,9 @@ namespace PulseOximeter.Model
 
                                     _stopwatch.Restart();
                                 }
+
+                                //Handle recording of data
+                                BackgroundThread_HandleRecording(current_line.Substring(7).Replace("\t", ", "));
                             }
                         }
                     }
@@ -662,6 +762,22 @@ namespace PulseOximeter.Model
             }
         }
 
+        public bool IsRecording
+        {
+            get
+            {
+                return _recording;
+            }
+        }
+
+        public DateTime RecordingStartTime
+        {
+            get
+            {
+                return _recording_start_time;
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -669,6 +785,25 @@ namespace PulseOximeter.Model
         public void Start ()
         {
             _background_thread.RunWorkerAsync();
+        }
+
+        public void StartRecording (string filename)
+        {
+            if (!_recording)
+            {
+                _recording_file = filename;
+                _recording = true;
+                NotifyPropertyChanged(nameof(IsRecording));
+            }
+        }
+
+        public void StopRecording ()
+        {
+            if (_recording)
+            {
+                _recording = false;
+                NotifyPropertyChanged(nameof(IsRecording));
+            }
         }
 
         #endregion

@@ -123,7 +123,6 @@ namespace PulseOximeter.ViewModel
             };
 
             _hr_plotmodel.PlotAreaBorderThickness = new OxyPlot.OxyThickness(1, 0, 0, 1);
-            //_hr_plotmodel.PlotMargins = new OxyPlot.OxyThickness(0);
             _hr_plotmodel.Axes.Add(x_axis);
             _hr_plotmodel.Axes.Add(y_axis);
             _hr_plotmodel.Series.Add(line_series);
@@ -160,7 +159,6 @@ namespace PulseOximeter.ViewModel
             };
 
             _spo2_plotmodel.PlotAreaBorderThickness = new OxyPlot.OxyThickness(1, 0, 0, 1);
-            //_spo2_plotmodel.PlotMargins = new OxyPlot.OxyThickness(0);
             _spo2_plotmodel.Axes.Add(x_axis);
             _spo2_plotmodel.Axes.Add(y_axis);
             _spo2_plotmodel.Series.Add(line_series);
@@ -186,6 +184,10 @@ namespace PulseOximeter.ViewModel
                 else if (e.PropertyName.Equals("SpO2"))
                 {
                     Update_SpO2_PlotModel();
+                }
+                else if (e.PropertyName.Equals("IsRecording"))
+                {
+                    NotifyPropertyChanged(nameof(ConnectionState));
                 }
             }
         }
@@ -346,12 +348,19 @@ namespace PulseOximeter.ViewModel
             }
         }
 
-        [ReactToModelPropertyChanged(new string[] { "ConnectionState" })]
+        [ReactToModelPropertyChanged(new string[] { "ConnectionState", "IsRecording" })]
         public string ConnectionState
         {
             get
             {
-                return DeviceConnectionStateConverter.ConvertToDescription(_model.ConnectionState);
+                string result = DeviceConnectionStateConverter.ConvertToDescription(_model.ConnectionState);
+                if (_model.IsRecording)
+                {
+                    var recording_duration_str = (DateTime.Now - _model.RecordingStartTime).ToString(@"hh\:mm\:ss");
+                    result += " (Recording: " + recording_duration_str + ")";
+                }
+
+                return result;
             }
         }
 
@@ -394,6 +403,31 @@ namespace PulseOximeter.ViewModel
             }
         }
 
+        [ReactToModelPropertyChanged(new string[] { "IsRecording" })]
+        public bool IsRecording
+        {
+            get
+            {
+                return _model.IsRecording;
+            }
+        }
+
+        [ReactToModelPropertyChanged(new string[] { "IsRecording" })]
+        public string RecordButtonText
+        {
+            get
+            {
+                if (_model.IsRecording)
+                {
+                    return "Stop Recording";
+                }
+                else
+                {
+                    return "Record";
+                }
+            }
+        }
+
         #endregion
 
         #region Methods
@@ -408,6 +442,16 @@ namespace PulseOximeter.ViewModel
         public void ToggleMute ()
         {
             _model.MuteAudio = !_model.MuteAudio;
+        }
+
+        public void StartRecording (string filename)
+        {
+            _model.StartRecording(filename);
+        }
+
+        public void StopRecording ()
+        {
+            _model.StopRecording();
         }
 
         #endregion

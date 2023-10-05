@@ -84,7 +84,34 @@ namespace PulseOximeter
 
         private void RecordButton_Click(object sender, RoutedEventArgs e)
         {
+            var vm = this.DataContext as MainWindowViewModel;
+            if (vm != null)
+            {
+                if (vm.IsRecording)
+                {
+                    vm.StopRecording();
+                }
+                else
+                {
+                    // Configure save file dialog box
+                    Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
+                    dlg.FileName = "NewRecording"; // Default file name
+                    dlg.DefaultExt = ".csv"; // Default file extension
+                    dlg.Filter = "CSV files (.csv)|*.csv"; // Filter files by extension
 
+                    // Show save file dialog box
+                    Nullable<bool> result = dlg.ShowDialog();
+
+                    // Process save file dialog box results
+                    if (result == true)
+                    {
+                        // Save document
+                        string filename = dlg.FileName;
+
+                        vm.StartRecording(filename);
+                    }
+                }
+            }
         }
     }
 }
