@@ -65,7 +65,10 @@ namespace PulseOximeter.ViewModel
 
         public void ApplyAlarmSettings (int hr_min, int hr_max, int spo2_min, int spo2_max)
         {
-
+            _application_model.HeartRateAlarm_Minimum = hr_min;
+            _application_model.HeartRateAlarm_Maximum = hr_max;
+            _application_model.SpO2Alarm_Minimum = spo2_min;
+            _application_model.SpO2Alarm_Maximum = spo2_max;
         }
 
         #endregion

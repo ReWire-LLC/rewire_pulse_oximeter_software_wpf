@@ -516,6 +516,10 @@ namespace PulseOximeter.Model
             {
                 return _alarm_hr_min;
             }
+            set
+            {
+                _alarm_hr_min = value;
+            }
         }
 
         public int HeartRateAlarm_Maximum
@@ -523,6 +527,10 @@ namespace PulseOximeter.Model
             get
             {
                 return _alarm_hr_max;
+            }
+            set
+            {
+                _alarm_hr_max = value;
             }
         }
 
@@ -532,6 +540,10 @@ namespace PulseOximeter.Model
             {
                 return _alarm_spo2_min;
             }
+            set
+            {
+                _alarm_spo2_min = value;
+            }
         }
 
         public int SpO2Alarm_Maximum
@@ -539,6 +551,10 @@ namespace PulseOximeter.Model
             get
             {
                 return _alarm_spo2_max;
+            }
+            set
+            {
+                _alarm_spo2_max = value;
             }
         }
 
