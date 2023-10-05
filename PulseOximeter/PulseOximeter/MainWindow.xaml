@@ -6,33 +6,43 @@
         xmlns:local="clr-namespace:PulseOximeter"
         mc:Ignorable="d"
         Loaded="Window_Loaded"
-        Title="ReWire Pulse Oximeter" Height="576" Width="1024">
-    <Grid Margin="20">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+        Title="ReWire Pulse Oximeter" Height="600" Width="1024">
+    <DockPanel>
+        <Menu DockPanel.Dock="Top">
+            <MenuItem Header="_File">
+                <MenuItem x:Name="AboutMenuItem" Header="_About" Click="AboutMenuItem_Click" />
+                <Separator />
+                <MenuItem x:Name="ExitMenuItem" Header="_Exit" Click="ExitMenuItem_Click" />
+            </MenuItem>
+        </Menu>
 
-        <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden">
-            <!-- Empty -->
-        </Frame>
+        <Grid Margin="20">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <Grid Grid.Row="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="*" />
-            </Grid.ColumnDefinitions>
+            <Frame x:Name="MainFrame" NavigationUIVisibility="Hidden">
+                <!-- Empty -->
+            </Frame>
 
-            <TextBlock Grid.Column="0" Text="{Binding Path=ConnectionState, FallbackValue=No device found}" FontSize="18" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10" TextWrapping="Wrap" />
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="2*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
 
-            <Button x:Name="MuteButton" Grid.Column="1" Content="{Binding Path=MuteButtonText, FallbackValue=Mute}" Margin="10" FontSize="18" Padding="10" Click="MuteButton_Click" />
-            <Button x:Name="SetAlarmsButton" Grid.Column="2" Content="Set Alarms" Margin="10" FontSize="18" Padding="10" Click="SetAlarmsButton_Click" />
-            <Button x:Name="DetailedViewButton" Grid.Column="3" Content="{Binding Path=DetailedViewButtonText, FallbackValue=Detailed View}" Margin="10" FontSize="18" Padding="10" Click="DetailedViewButton_Click" />
-            <Button x:Name="RecordButton" Grid.Column="4" Content="{Binding Path=RecordButtonText, FallbackValue=Record}" Margin="10" FontSize="18" Padding="10" Click="RecordButton_Click" />
+                <TextBlock Grid.Column="0" Text="{Binding Path=ConnectionState, FallbackValue=No device found}" FontSize="18" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="10" TextWrapping="Wrap" />
+
+                <Button x:Name="MuteButton" Grid.Column="1" Content="{Binding Path=MuteButtonText, FallbackValue=Mute}" Margin="10" FontSize="18" Padding="10" Click="MuteButton_Click" />
+                <Button x:Name="SetAlarmsButton" Grid.Column="2" Content="Set Alarms" Margin="10" FontSize="18" Padding="10" Click="SetAlarmsButton_Click" />
+                <Button x:Name="DetailedViewButton" Grid.Column="3" Content="{Binding Path=DetailedViewButtonText, FallbackValue=Detailed View}" Margin="10" FontSize="18" Padding="10" Click="DetailedViewButton_Click" />
+                <Button x:Name="RecordButton" Grid.Column="4" Content="{Binding Path=RecordButtonText, FallbackValue=Record}" Margin="10" FontSize="18" Padding="10" Click="RecordButton_Click" />
+            </Grid>
+
         </Grid>
-
-    </Grid>
+    </DockPanel>
 </Window>

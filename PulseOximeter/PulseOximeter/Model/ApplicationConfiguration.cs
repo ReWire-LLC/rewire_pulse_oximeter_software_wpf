@@ -4,9 +4,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Resources;
 
 namespace PulseOximeter.Model
 {
@@ -195,6 +198,48 @@ namespace PulseOximeter.Model
             {
                 _spo2_min = value;
                 SaveSettings();
+            }
+        }
+
+        #endregion
+
+        #region Static Methods
+
+        public static DateTime GetBuildDate ()
+        {
+            try
+            {
+                //Read the build date from the application resources
+                Uri uri = new Uri("/Resources/BuildDate.txt", UriKind.Relative);
+                StreamResourceInfo info = Application.GetResourceStream(uri);
+                StreamReader reader = new StreamReader(info.Stream);
+                var build_date_str = reader.ReadLine();
+                reader.Close();
+
+                //Convert the build date to a DateTime object
+                var build_date = DateTime.Parse(build_date_str);
+
+                //Return it to the caller
+                return build_date;
+            }
+            catch (Exception)
+            {
+                return DateTime.MinValue;
+            }
+        }
+
+        public static string GetApplicationVersion ()
+        {
+            try
+            {
+                Assembly current_assembly = typeof(ApplicationConfiguration).Assembly;
+                AssemblyName current_assembly_name = current_assembly.GetName();
+                Version ver = current_assembly_name.Version;
+                return ver.ToString();
+            }
+            catch (Exception ex)
+            {
+                return string.Empty;
             }
         }
 

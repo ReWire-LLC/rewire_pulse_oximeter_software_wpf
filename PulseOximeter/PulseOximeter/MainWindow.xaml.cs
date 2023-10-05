@@ -67,12 +67,14 @@ namespace PulseOximeter
             var vm = this.DataContext as MainWindowViewModel;
             if (vm != null)
             {
+                //Toggle the mute on or off
                 vm.ToggleMute();
             }
         }
 
         private void SetAlarmsButton_Click(object sender, RoutedEventArgs e)
         {
+            //Open the "Alarms" window to allow the user to set some alarms
             var vm = this.DataContext as MainWindowViewModel;
             if (vm != null)
             {
@@ -87,12 +89,16 @@ namespace PulseOximeter
             var vm = this.DataContext as MainWindowViewModel;
             if (vm != null)
             {
+                //Check to see if we are already recording
                 if (vm.IsRecording)
                 {
+                    //If already recording, then request to stop recording
                     vm.StopRecording();
                 }
                 else
                 {
+                    //Request a file from the user
+
                     // Configure save file dialog box
                     Microsoft.Win32.SaveFileDialog dlg = new Microsoft.Win32.SaveFileDialog();
                     dlg.FileName = "NewRecording"; // Default file name
@@ -112,6 +118,20 @@ namespace PulseOximeter
                     }
                 }
             }
+        }
+
+        private void ExitMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            //Close this window (and the application)
+            this.Close();
+        }
+
+        private void AboutMenuItem_Click(object sender, RoutedEventArgs e)
+        {
+            //Show the "About" window to the user
+            Window_About about_window = new Window_About();
+            about_window.Owner = this;
+            about_window.ShowDialog();
         }
     }
 }
