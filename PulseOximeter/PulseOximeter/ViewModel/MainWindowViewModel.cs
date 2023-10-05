@@ -26,13 +26,13 @@ namespace PulseOximeter.ViewModel
         private List<DateTime> _ppg_plot_xvals = new List<DateTime>();
         private List<int> _ppg_plot_yvals = new List<int>();
 
-        private TimeSpan _hr_lookback_duration = TimeSpan.FromMinutes(30);
+        private TimeSpan _hr_lookback_duration = TimeSpan.FromMinutes(5);
         private PlotModel _hr_plotmodel = new PlotModel();
         private List<DateTime> _hr_plot_xvals = new List<DateTime>();
         private List<int> _hr_plot_yvals = new List<int>();
         private DateTime _hr_plotmodel_last_update_time = DateTime.MinValue;
 
-        private TimeSpan _spo2_lookback_duration = TimeSpan.FromMinutes(30);
+        private TimeSpan _spo2_lookback_duration = TimeSpan.FromMinutes(5);
         private PlotModel _spo2_plotmodel = new PlotModel();
         private List<DateTime> _spo2_plot_xvals = new List<DateTime>();
         private List<int> _spo2_plot_yvals = new List<int>();
@@ -110,7 +110,9 @@ namespace PulseOximeter.ViewModel
                 IsPanEnabled = false,
                 IsZoomEnabled = false,
                 Minimum = 0,
-                MinimumRange = 50
+                MinimumRange = 50,
+                MaximumRange = 100,
+                MajorStep = 20,
             };
 
             LineSeries line_series = new LineSeries()
@@ -121,7 +123,7 @@ namespace PulseOximeter.ViewModel
             };
 
             _hr_plotmodel.PlotAreaBorderThickness = new OxyPlot.OxyThickness(1, 0, 0, 1);
-            _hr_plotmodel.PlotMargins = new OxyPlot.OxyThickness(0);
+            //_hr_plotmodel.PlotMargins = new OxyPlot.OxyThickness(0);
             _hr_plotmodel.Axes.Add(x_axis);
             _hr_plotmodel.Axes.Add(y_axis);
             _hr_plotmodel.Series.Add(line_series);
@@ -146,7 +148,8 @@ namespace PulseOximeter.ViewModel
                 IsPanEnabled = false,
                 IsZoomEnabled = false,
                 Minimum = 0,
-                MinimumRange = 50
+                MinimumRange = 50,
+                MajorStep = 20,
             };
 
             LineSeries line_series = new LineSeries()
@@ -157,7 +160,7 @@ namespace PulseOximeter.ViewModel
             };
 
             _spo2_plotmodel.PlotAreaBorderThickness = new OxyPlot.OxyThickness(1, 0, 0, 1);
-            _spo2_plotmodel.PlotMargins = new OxyPlot.OxyThickness(0);
+            //_spo2_plotmodel.PlotMargins = new OxyPlot.OxyThickness(0);
             _spo2_plotmodel.Axes.Add(x_axis);
             _spo2_plotmodel.Axes.Add(y_axis);
             _spo2_plotmodel.Series.Add(line_series);

@@ -19,6 +19,9 @@ namespace PulseOximeter.Model
         ConnectingToDevice,
 
         [Description("Device connected")]
-        Connected
+        Connected,
+
+        [Description("The application has encountered an error. Please re-start.")]
+        Error
     }
 }

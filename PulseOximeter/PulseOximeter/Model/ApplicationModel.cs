@@ -44,6 +44,8 @@ namespace PulseOximeter.Model
         private DateTime _last_no_pulse_time = DateTime.MinValue;
         private TimeSpan _no_pulse_period = TimeSpan.FromSeconds(15);
 
+        private Stopwatch _stopwatch = new Stopwatch();
+
         private int _alarm_hr_min = 50;
         private int _alarm_hr_max = 100;
         private int _alarm_spo2_min = 70;
@@ -111,7 +113,11 @@ namespace PulseOximeter.Model
 
         private void _background_thread_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
-            //empty
+            if (e.Error != null)
+            {
+                _device_connection_state = DeviceConnectionState.Error;
+                NotifyPropertyChanged(nameof(ConnectionState));
+            }
         }
 
         private void _background_thread_ProgressChanged(object sender, ProgressChangedEventArgs e)
@@ -130,6 +136,7 @@ namespace PulseOximeter.Model
         {
             //Do some setup work
             string selected_com_port = string.Empty;
+            _stopwatch.Start();
 
             //Loop forever
             while (!_background_thread.CancellationPending)
@@ -245,14 +252,12 @@ namespace PulseOximeter.Model
                             {
                                 IR = ir;
 
-                                if (hr != HeartRate)
+                                if (_stopwatch.ElapsedMilliseconds >= 1000)
                                 {
                                     HeartRate = hr;
-                                }
-                                
-                                if (spo2 != SpO2)
-                                {
                                     SpO2 = spo2;
+
+                                    _stopwatch.Restart();
                                 }
                             }
                         }
