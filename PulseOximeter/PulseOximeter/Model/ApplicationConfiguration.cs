@@ -66,7 +66,14 @@ namespace PulseOximeter.Model
                 string json = JsonConvert.SerializeObject(this, Formatting.Indented);
 
                 //Write the defaults to the file
-                File.WriteAllText(file_name, json);
+                try
+                {
+                    File.WriteAllText(file_name, json);
+                }
+                catch (Exception ex)
+                {
+                    //empty
+                }
             }
         }
 
@@ -81,26 +88,33 @@ namespace PulseOximeter.Model
             //Read the file
             if (File.Exists(file_name))
             {
-                JObject json_object = JObject.Parse(File.ReadAllText(file_name));
-                
-                if (json_object.ContainsKey(nameof(HeartRateAlarmMaximum)))
+                try
                 {
-                    this.HeartRateAlarmMaximum = json_object[nameof(HeartRateAlarmMaximum)].ToObject<int>();
-                }
+                    JObject json_object = JObject.Parse(File.ReadAllText(file_name));
 
-                if (json_object.ContainsKey(nameof(HeartRateAlarmMinimum)))
-                {
-                    this.HeartRateAlarmMinimum = json_object[nameof(HeartRateAlarmMinimum)].ToObject<int>();
+                    if (json_object.ContainsKey(nameof(HeartRateAlarmMaximum)))
+                    {
+                        this.HeartRateAlarmMaximum = json_object[nameof(HeartRateAlarmMaximum)].ToObject<int>();
+                    }
+
+                    if (json_object.ContainsKey(nameof(HeartRateAlarmMinimum)))
+                    {
+                        this.HeartRateAlarmMinimum = json_object[nameof(HeartRateAlarmMinimum)].ToObject<int>();
+                    }
+
+                    if (json_object.ContainsKey(nameof(SpO2AlarmMaximum)))
+                    {
+                        this.SpO2AlarmMaximum = json_object[nameof(SpO2AlarmMaximum)].ToObject<int>();
+                    }
+
+                    if (json_object.ContainsKey(nameof(SpO2AlarmMinimum)))
+                    {
+                        this.SpO2AlarmMinimum = json_object[nameof(SpO2AlarmMinimum)].ToObject<int>();
+                    }
                 }
-                
-                if (json_object.ContainsKey(nameof(SpO2AlarmMaximum)))
+                catch (Exception ex)
                 {
-                    this.SpO2AlarmMaximum = json_object[nameof(SpO2AlarmMaximum)].ToObject<int>();
-                }
-                
-                if (json_object.ContainsKey(nameof(SpO2AlarmMinimum)))
-                {
-                    this.SpO2AlarmMinimum = json_object[nameof(SpO2AlarmMinimum)].ToObject<int>();
+                    //empty
                 }
             }
         }
@@ -117,7 +131,14 @@ namespace PulseOximeter.Model
                 string json = JsonConvert.SerializeObject(this, Formatting.Indented);
 
                 //Write the values to the file
-                File.WriteAllText(file_name, json);
+                try
+                {
+                    File.WriteAllText(file_name, json);
+                }
+                catch (Exception ex)
+                {
+                    //empty
+                }
             }
         }
 
