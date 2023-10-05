@@ -27,6 +27,8 @@ namespace PulseOximeter.Model
 
         #region Private data members
 
+        private ApplicationConfiguration _application_configuration = new ApplicationConfiguration();
+
         private DeviceConnectionState _device_connection_state = DeviceConnectionState.NoDevice;
 
         private BackgroundWorker _background_thread = new BackgroundWorker();
@@ -89,6 +91,12 @@ namespace PulseOximeter.Model
 
         public ApplicationModel()
         {
+            //Load the alarm values from the configuration class
+            _alarm_hr_max = _application_configuration.HeartRateAlarmMaximum;
+            _alarm_hr_min = _application_configuration.HeartRateAlarmMinimum;
+            _alarm_spo2_max = _application_configuration.SpO2AlarmMaximum;
+            _alarm_spo2_min = _application_configuration.SpO2AlarmMinimum;
+
             //Set up the background thread
             _background_thread.DoWork += _background_thread_DoWork;
             _background_thread.RunWorkerCompleted += _background_thread_RunWorkerCompleted;
@@ -518,7 +526,11 @@ namespace PulseOximeter.Model
             }
             set
             {
-                _alarm_hr_min = value;
+                if (value != _alarm_hr_min)
+                {
+                    _alarm_hr_min = value;
+                    _application_configuration.HeartRateAlarmMinimum = value;
+                }
             }
         }
 
@@ -530,7 +542,11 @@ namespace PulseOximeter.Model
             }
             set
             {
-                _alarm_hr_max = value;
+                if (value != _alarm_hr_max)
+                {
+                    _alarm_hr_max = value;
+                    _application_configuration.HeartRateAlarmMaximum = value;
+                }
             }
         }
 
@@ -542,7 +558,11 @@ namespace PulseOximeter.Model
             }
             set
             {
-                _alarm_spo2_min = value;
+                if (value != _alarm_spo2_min)
+                {
+                    _alarm_spo2_min = value;
+                    _application_configuration.SpO2AlarmMinimum = value;
+                }
             }
         }
 
@@ -554,7 +574,11 @@ namespace PulseOximeter.Model
             }
             set
             {
-                _alarm_spo2_max = value;
+                if (value != _alarm_spo2_max)
+                {
+                    _alarm_spo2_max = value;
+                    _application_configuration.SpO2AlarmMaximum = value;
+                }
             }
         }
 
