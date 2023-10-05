@@ -27,6 +27,11 @@ namespace PulseOximeter.Model
 
         #region Private data members
 
+        private List<DateTime> _recent_ir_value_datetimes = new List<DateTime>();
+        private List<int> _recent_ir_values = new List<int>();
+        private DateTime _last_perfusion_index_update_time = DateTime.MinValue;
+        private TimeSpan _perfusion_index_update_period = TimeSpan.FromSeconds(1);
+
         private ApplicationConfiguration _application_configuration = new ApplicationConfiguration();
 
         private DeviceConnectionState _device_connection_state = DeviceConnectionState.NoDevice;
@@ -35,6 +40,7 @@ namespace PulseOximeter.Model
         private int _heart_rate = 0;
         private int _spo2 = 0;
         private int _ir = 0;
+        private double _perfusion_index = 0;
 
         private SerialPort? _serial_port = null;
         private List<byte> _buffer = new List<byte>();
@@ -251,6 +257,7 @@ namespace PulseOximeter.Model
                             if (hr_parse_success && spo2_parse_success && ir_parse_success)
                             {
                                 IR = ir;
+                                UpdatePerfusionIndex(ir);
 
                                 if (_stopwatch.ElapsedMilliseconds >= 1000)
                                 {
@@ -263,6 +270,35 @@ namespace PulseOximeter.Model
                         }
                     }
                 }
+            }
+        }
+
+        private void UpdatePerfusionIndex (int ir)
+        {
+            //The following sources were used to determine the calculation for the perfusion index:
+            //1. https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3417976/
+            //2. https://www.analog.com/en/technical-articles/guidelines-for-spo2-measurement--maxim-integrated.html
+            //3. https://dsp.stackexchange.com/questions/46615/calculate-spo%E2%82%82-value-from-raw-fingertip-plethysmography-ppg
+            //4. https://www.ti.com/lit/an/slaa655/slaa655.pdf
+
+            DateTime now_datetime = DateTime.Now;
+            _recent_ir_values.Add(ir);
+            _recent_ir_value_datetimes.Add(now_datetime);
+
+            int last_index_to_remove = _recent_ir_value_datetimes.FindLastIndex(0, x => x < (now_datetime - TimeSpan.FromSeconds(5)));
+            if (last_index_to_remove > -1)
+            {
+                _recent_ir_value_datetimes.RemoveRange(0, last_index_to_remove + 1);
+                _recent_ir_values.RemoveRange(0, last_index_to_remove + 1);
+            }
+
+            if (now_datetime >= (_last_perfusion_index_update_time + _perfusion_index_update_period))
+            {
+                _last_perfusion_index_update_time = DateTime.Now;
+                var dc_component = _recent_ir_values.Average();
+                var ac_component = _recent_ir_values.Max() - _recent_ir_values.Min();
+                var pi = (ac_component / dc_component) * 100.0;
+                PerfusionIndex = pi;
             }
         }
 
@@ -520,6 +556,19 @@ namespace PulseOximeter.Model
             {
                 _spo2 = value;
                 BackgroundThread_NotifyPropertyChanged(nameof(SpO2));
+            }
+        }
+
+        public double PerfusionIndex
+        {
+            get
+            {
+                return _perfusion_index;
+            }
+            private set
+            {
+                _perfusion_index = value;
+                BackgroundThread_NotifyPropertyChanged(nameof(PerfusionIndex));
             }
         }
 
