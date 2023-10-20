@@ -183,6 +183,7 @@ namespace PulseOximeter.Model
 
                         //Connect to the selected device
                         _serial_port = new SerialPort(selected_com_port);
+                        _serial_port.DtrEnable = true;
                         _serial_port.Open();
                         if (_serial_port.IsOpen)
                         {
