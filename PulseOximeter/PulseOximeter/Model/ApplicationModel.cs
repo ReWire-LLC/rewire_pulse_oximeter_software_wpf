@@ -28,6 +28,13 @@ namespace PulseOximeter.Model
 
         #region Private data members
 
+        private string _pulse_oximeter_firmware_version_str = "1.0";
+        private double _pulse_oximeter_firmware_version = 1.0;
+        private int _firmware_version_request_count = 0;
+        private int _firmware_version_max_request_count = 3;
+        private DateTime _last_firmware_version_request_time = DateTime.MinValue;
+        private TimeSpan _firmware_version_request_interval = TimeSpan.FromSeconds(250);
+
         private bool _recording = false;
         private string _recording_file = string.Empty;
         private DateTime _recording_start_time = DateTime.MinValue;
@@ -35,11 +42,6 @@ namespace PulseOximeter.Model
         private RecordingState _recording_state = RecordingState.NotRecording;
         private StreamWriter? _recording_writer = null;
         private DateTime _recording_last_ui_update_time = DateTime.MinValue;
-
-        private List<DateTime> _recent_ir_value_datetimes = new List<DateTime>();
-        private List<int> _recent_ir_values = new List<int>();
-        private DateTime _last_perfusion_index_update_time = DateTime.MinValue;
-        private TimeSpan _perfusion_index_update_period = TimeSpan.FromSeconds(1);
 
         private ApplicationConfiguration _application_configuration = new ApplicationConfiguration();
 
@@ -188,7 +190,27 @@ namespace PulseOximeter.Model
                         if (_serial_port.IsOpen)
                         {
                             _serial_port.WriteLine("stream on");
-                            ConnectionState = DeviceConnectionState.Connected;
+                            ConnectionState = DeviceConnectionState.Connected_RequestFirmwareVersion;
+                        }
+
+                        break;
+
+                    case DeviceConnectionState.Connected_RequestFirmwareVersion:
+
+                        if (_serial_port != null && _serial_port.IsOpen)
+                        {
+                            try
+                            {
+                                BackgroundThread_HandleFirmwareVersionRequest();
+                            }
+                            catch (Exception ex)
+                            {
+                                //empty
+                            }
+                        }
+                        else
+                        {
+                            ConnectionState = DeviceConnectionState.NoDevice;
                         }
 
                         break;
@@ -213,6 +235,91 @@ namespace PulseOximeter.Model
 
                         break;
                 }
+            }
+        }
+
+        private void BackgroundThread_HandleFirmwareVersionRequest ()
+        {
+            //Read any data that has arrived from the pulse oximeter
+            //Handle input of the data from the pulse oximeter
+            if (_serial_port != null && _serial_port.BytesToRead > 0)
+            {
+                byte[] current_read = new byte[_serial_port.BytesToRead];
+                var total_bytes_read = _serial_port.Read(current_read, 0, current_read.Length);
+                _buffer.AddRange(current_read.ToList());
+
+                if (_buffer.Contains(0x0A))
+                {
+                    int index_of_newline = _buffer.IndexOf(0x0A);
+                    var current_line_as_bytes = _buffer.Take(index_of_newline + 1);
+                    string current_line = Encoding.UTF8.GetString(current_line_as_bytes.ToArray()).Trim();
+                    if (_buffer.Count > (index_of_newline + 1))
+                    {
+                        _buffer = _buffer.Skip(index_of_newline + 1).ToList();
+                    }
+                    else
+                    {
+                        _buffer.Clear();
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(current_line) && current_line.StartsWith("[VERSION]"))
+                    {
+                        var split_current_line = current_line.Split(' ').ToList();
+                        if (split_current_line.Count >= 2)
+                        {
+                            var version_string = split_current_line[1];
+                            _pulse_oximeter_firmware_version_str = version_string.Trim();
+                            bool parse_success = double.TryParse(_pulse_oximeter_firmware_version_str, out double result);
+                            if (parse_success)
+                            {
+                                _pulse_oximeter_firmware_version = result;
+
+                                //If we reach this point in the code, we are done. We have the firmware version. Let's
+                                //proceed to the next state
+
+                                //Enable pulse ox device streaming
+                                _serial_port.WriteLine("stream on");
+
+                                //Proceed to the next state
+                                ConnectionState = DeviceConnectionState.Connected;
+
+                                //Return immediately
+                                return;
+                            }
+                        }
+                    }
+                }
+            }
+
+            //Check to see if we should still request the firmware version
+            if (_firmware_version_request_count < _firmware_version_max_request_count)
+            {
+                //Check to see if enough time has passed since our last attempt to request the firmware version
+                if (DateTime.Now >= (_last_firmware_version_request_time + _firmware_version_request_interval))
+                {
+                    //If so, request the firmware version
+                    if (_serial_port != null && _serial_port.IsOpen)
+                    {
+                        _serial_port.WriteLine("version");
+
+                        _last_firmware_version_request_time = DateTime.Now;
+                        _firmware_version_request_count++;
+                    }
+                }
+            }
+            else
+            {
+                //If we have exceeded the maximum number of allowed attempts, then we will automatically
+                //assume that the firmware is version 1.0.
+
+                //Enable pulse ox device streaming
+                if (_serial_port != null && _serial_port.IsOpen)
+                {
+                    _serial_port.WriteLine("stream on");
+                }
+
+                //Proceed to the next state
+                ConnectionState = DeviceConnectionState.Connected;
             }
         }
 
@@ -342,7 +449,7 @@ namespace PulseOximeter.Model
                     if (!string.IsNullOrWhiteSpace(current_line) && current_line.StartsWith("[DATA]"))
                     {
                         var split_current_line = current_line.Split('\t').ToList();
-                        if (split_current_line.Count >= 9)
+                        if (_pulse_oximeter_firmware_version == 1.0 && split_current_line.Count >= 9)
                         {
                             var ir_string = split_current_line[1];
                             var hr_string = split_current_line[3];
@@ -355,7 +462,6 @@ namespace PulseOximeter.Model
                             if (hr_parse_success && spo2_parse_success && ir_parse_success)
                             {
                                 IR = ir;
-                                UpdatePerfusionIndex(ir);
 
                                 if (_stopwatch.ElapsedMilliseconds >= 1000)
                                 {
@@ -369,37 +475,37 @@ namespace PulseOximeter.Model
                                 BackgroundThread_HandleRecording(current_line.Substring(7).Replace("\t", ", "));
                             }
                         }
+                        else if (_pulse_oximeter_firmware_version > 1.0 && split_current_line.Count >= 11)
+                        {
+                            var ir_string = split_current_line[2];
+                            var hr_string = split_current_line[4];
+                            var spo2_string = split_current_line[6];
+                            var perfusion_index = split_current_line[10];
+
+                            var ir_parse_success = Int32.TryParse(ir_string, out int ir);
+                            var hr_parse_success = Int32.TryParse(hr_string, out int hr);
+                            var spo2_parse_success = Int32.TryParse(spo2_string, out int spo2);
+                            var pi_parse_success = Double.TryParse(perfusion_index, out double pi);
+
+                            if (hr_parse_success && spo2_parse_success && ir_parse_success && pi_parse_success)
+                            {
+                                IR = ir;
+
+                                if (_stopwatch.ElapsedMilliseconds >= 1000)
+                                {
+                                    HeartRate = hr;
+                                    SpO2 = spo2;
+                                    PerfusionIndex = pi;
+
+                                    _stopwatch.Restart();
+                                }
+
+                                //Handle recording of data
+                                BackgroundThread_HandleRecording(current_line.Substring(7).Replace("\t", ", "));
+                            }
+                        }
                     }
                 }
-            }
-        }
-
-        private void UpdatePerfusionIndex (int ir)
-        {
-            //The following sources were used to determine the calculation for the perfusion index:
-            //1. https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3417976/
-            //2. https://www.analog.com/en/technical-articles/guidelines-for-spo2-measurement--maxim-integrated.html
-            //3. https://dsp.stackexchange.com/questions/46615/calculate-spo%E2%82%82-value-from-raw-fingertip-plethysmography-ppg
-            //4. https://www.ti.com/lit/an/slaa655/slaa655.pdf
-
-            DateTime now_datetime = DateTime.Now;
-            _recent_ir_values.Add(ir);
-            _recent_ir_value_datetimes.Add(now_datetime);
-
-            int last_index_to_remove = _recent_ir_value_datetimes.FindLastIndex(0, x => x < (now_datetime - TimeSpan.FromSeconds(5)));
-            if (last_index_to_remove > -1)
-            {
-                _recent_ir_value_datetimes.RemoveRange(0, last_index_to_remove + 1);
-                _recent_ir_values.RemoveRange(0, last_index_to_remove + 1);
-            }
-
-            if (now_datetime >= (_last_perfusion_index_update_time + _perfusion_index_update_period))
-            {
-                _last_perfusion_index_update_time = DateTime.Now;
-                var dc_component = _recent_ir_values.Average();
-                var ac_component = _recent_ir_values.Max() - _recent_ir_values.Min();
-                var pi = (ac_component / dc_component) * 100.0;
-                PerfusionIndex = pi;
             }
         }
 
